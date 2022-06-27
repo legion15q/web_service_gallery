@@ -1,0 +1,11 @@
+version: '3.9'
+
+services:
+  nginx:
+    container_name: cont_nginx
+    image: nginx:latest
+    ports:
+      - "127.0.0.1:8080:80"
+    volumes:
+      - "./src:/etc/nginx/html"
+      - "./docker/nginx/conf.d:/etc/nginx/conf.d"
