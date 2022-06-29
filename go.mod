@@ -1,3 +1,5 @@
-module nginx_docker
+module web_app
 
-go 1.17
+go 1.13
+
+require github.com/gorilla/mux v1.8.0
