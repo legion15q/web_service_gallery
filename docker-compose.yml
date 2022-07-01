@@ -6,17 +6,33 @@ services:
     #путь к dockerfile
     build: "./docker/nginx"
     ports:
-      - "127.0.0.1:8080:80"
+      - "80:80"
+      #- "443:443"
+    restart: always
     volumes:
       - "./src:/etc/nginx/html"
-      - "./docker/nginx/conf.d:/etc/nginx/conf.d"
+      - "./docker/nginx/conf.d/nginx.conf:/etc/nginx/nginx.conf"
+      #- ./data/certbot/conf:/etc/letsencrypt
+      #- ./data/certbot/www:/var/www/certbot
+    # Перезапустит nginx контейнер каждые 6 часов и подгрузит новые сертификаты, если есть
+    #command: '/bin/sh -c ''while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g "daemon off;"'''
     depends_on:
       - "go-web-app"
+  #certbot:
+    #container_name: cont_cerbot
+    #image: certbot/certbot:latest
+    #restart: always
+    # Проверяет каждые 12 часов, нужны ли новые сертификаты
+    #entrypoint:  "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    #volumes:
+      #- ./data/certbot/conf:/etc/letsencrypt
+      #- ./data/certbot/www:/var/www/certbot
   go-web-app:
     container_name: cont_go_app
     #путь к main.go и dockerfile
-    build: "./cmd/main"
+    build: 
+      context:  "./cmd/main"
     ports:
-      - "8081"
+      - "8080"
 
-    
+
