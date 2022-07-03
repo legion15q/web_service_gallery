@@ -7,6 +7,10 @@ COPY ./ ./
 RUN go mod init
 RUN go mod tidy
 RUN go get ./...
+# Создаем папку, откуда будут подтягиваться картины
+WORKDIR /images/
+# Возвращаемся в исходную
+WORKDIR /go/src/my_app_in_wm
 RUN go build -o main .
 #порт контейнера, который слушает main.go. Не зависит от порта в браузере
 EXPOSE 8080
