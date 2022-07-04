@@ -1,0 +1,7 @@
+CREATE TABLE pictures (picture_id SERIAL PRIMARY KEY,
+                       picture_name VARCHAR(100), 
+                       picture_description VARCHAR(600), 
+		       author VARCHAR(100),
+                       price DECIMAL(10,2), 
+		       is_purchased BOOL,
+                       picture_path VARCHAR(100));
