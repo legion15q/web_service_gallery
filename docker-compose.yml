@@ -19,29 +19,31 @@ services:
       - "go-web-app"
   go-web-app:
     container_name: cont_go_app
-<<<<<<< HEAD
-    #путь к dockerfile
-    build: 
-      "./cmd/main"
-    #ports:
-  #  - "127.0.0.1:8080:81"
-=======
     #путь к main.go и dockerfile
     build: 
       context:  "./cmd/main"
+    volumes:
+      - ./cmd/main/images:/go/src/my_app_in_wm/images/:z
     ports:
       - "8080"
+    links:
+      - db
+    depends_on:
+      - db
   db:
     container_name: cont_pg_db
     image: postgres:14.3
+    restart: always
     volumes:
-      - ./postgres_data:/var/lib/postgresql/data/ 
+      - ./postgres_data:/var/lib/postgresql/data/:z 
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: root
       POSTGRES_DB: my_db
+      #PGDATA: ./postgres_data
     ports:
       - "5432:5432"
+    
   pg_admin:
     container_name: cont_pg_admin
     image: dpage/pgadmin4:2022-05-31-1
@@ -55,5 +57,4 @@ services:
     #volumes:
     #  - redis_data:/data
 
->>>>>>> aebbbe0b65913792085f04109ffbf140ed2d7492
 

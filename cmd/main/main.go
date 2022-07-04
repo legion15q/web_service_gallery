@@ -33,7 +33,7 @@ func main() {
 	//regex := `pic_[0-9]+\.jpg+`
 	var handlers HandlerWrapper
 	handlers.HandlerErorr = ApiError{http.StatusAccepted, nil}
-	connStr := "host = host.docker.internal port = 5432 user=admin password=root dbname=postgres sslmode=disable"
+	connStr := "host = db port = 5432 user=admin password=root dbname=postgres sslmode=disable"
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		log.Fatal("Невозможно подключиться к базе данных")
@@ -131,9 +131,12 @@ type PictureRecord struct {
 }
 
 func AddPictureRecordToDB(db *sql.DB, PR PictureRecord) (sql.Result, error) {
+	fmt.Println(PR)
 	result, err := db.Exec(`INSERT INTO pictures (picture_name, picture_description, author, price, is_purchased,
 		picture_path) VALUES ($1, $2, $3, $4, $5, $6)`, PR.Picture_name, PR.Picture_description, PR.Author, PR.Price,
 		PR.Is_purchased, PR.Picture_path)
+	fmt.Println(result, "asdsad")
+	fmt.Println(err, "aswwwww")
 	return result, err
 }
 
@@ -164,17 +167,19 @@ func ValidateParams(r *http.Request) (PictureRecord, error) {
 }
 
 func (hdlr HandlerWrapper) ServeAddPictures(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("here")
 	PR, err := ValidateParams(r)
 	if err != nil {
 		http.Error(w, "Error in Validating Params"+err.Error(), http.StatusInternalServerError)
 		return
 	}
-
+	fmt.Println("here2")
 	res, err := AddPictureRecordToDB(hdlr.DB, PR)
 	if err != nil {
 		http.Error(w, "cant insert file in database: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
+	fmt.Println("here3")
 	fmt.Fprintf(w, "Success upload to database %v\n", res)
 	w.WriteHeader(http.StatusAccepted)
 }

@@ -7,11 +7,6 @@ COPY ./ ./
 RUN go mod init
 RUN go mod tidy
 RUN go get ./...
-<<<<<<< HEAD
-RUN GOOS=linux go build -ldflags="-s -w" -o ./cmd/main ./main.go
-
-
-=======
 # Создаем папку, откуда будут подтягиваться картины
 WORKDIR /images/
 # Возвращаемся в исходную
@@ -24,4 +19,3 @@ ENTRYPOINT [ "./main" ]
 # docker build -t go-app .
 # docker run --name=go-web-app -p 8080:80 go-app 
 # То есть слушаем порт 80 контейнера, который маппится с портом 8080 из браузера
->>>>>>> aebbbe0b65913792085f04109ffbf140ed2d7492
