@@ -4,7 +4,8 @@ services:
   nginx:
     container_name: cont_nginx
     #путь к dockerfile
-    build: "./docker/nginx"
+    build: 
+      "./docker/nginx"
     ports:
       - "127.0.0.1:8080:80"
     volumes:
@@ -14,9 +15,10 @@ services:
       - "go-web-app"
   go-web-app:
     container_name: cont_go_app
-    #путь к main.go и dockerfile
-    build: "./cmd/main"
-    ports:
-      - "8081"
+    #путь к dockerfile
+    build: 
+      "./cmd/main"
+    #ports:
+  #  - "127.0.0.1:8080:81"
 
     

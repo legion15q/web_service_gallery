@@ -7,3 +7,4 @@ RUN go mod tidy
 RUN go get ./...
 RUN GOOS=linux go build -ldflags="-s -w" -o ./cmd/main ./main.go
 
+
