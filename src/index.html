@@ -37,10 +37,10 @@
             <div class="u-layout-row">
               <div class="u-container-style u-layout-cell u-size-30 u-layout-cell-1">
                 <div class="u-container-layout u-container-layout-1">
-                  <img class="u-image u-image-default u-image-1" src="images/page/1/pic/1" alt="" data-image-width="840" data-image-height="1280">
+                  <img class="u-image u-image-default u-image-1" id = "img_1" src="page/1/pic/1" alt="" data-image-width="840" data-image-height="1280">
                 </div>
               </div>
-			     <iframe src="images/page/1/pic/1/text"></iframe>
+			     <iframe id = 'frame_1' src="page/1/pic/1/text"></iframe>
             </div>
           </div>
         </div>
@@ -53,18 +53,54 @@
             <div class="u-layout-row">
               <div class="u-container-style u-layout-cell u-size-30 u-layout-cell-1">
                 <div class="u-container-layout u-container-layout-1">
-                  <img class="u-image u-image-default u-image-1" src="images/page/1/pic/2" alt="" data-image-width="875" data-image-height="1280">
+                  <img class="u-image u-image-default u-image-1" id = "img_2" src="page/1/pic/2" alt="" data-image-width="875" data-image-height="1280">
                 </div>
               </div>
-				<iframe src="images/page/1/pic/2/text"></iframe>
+				<iframe id = 'frame_2' src="page/1/pic/2/text"></iframe>
             </div>
           </div>
         </div>
         <div class="u-clearfix u-group-elements u-group-elements-1">
-		  <!--<a href="#" onclick="$.ajax({type: 'GET', url: 'page/next', data: 'data1=1&data2=2&data3=3', success: function(data){ $('.results').html(data);}});">Отправить</a> -->
-          <a href="https://gallery.com/page=next" class="u-active-none u-border-2 u-border-palette-1-base u-bottom-left-radius-0 u-bottom-right-radius-0 u-btn u-btn-rectangle u-button-style u-hover-none u-none u-radius-0 u-top-left-radius-0 u-top-right-radius-0 u-btn-1">Следующая страниа</a>
-          <a href="https://gallery.com/page=prev" class="u-active-none u-border-2 u-border-palette-1-base u-bottom-left-radius-0 u-bottom-right-radius-0 u-btn u-btn-rectangle u-button-style u-hover-none u-none u-radius-0 u-top-left-radius-0 u-top-right-radius-0 u-btn-2">Предыдущая страница</a>
-          <a href="https://gallery.com/page=first" class="u-active-none u-border-2 u-border-palette-1-base u-bottom-left-radius-0 u-bottom-right-radius-0 u-btn u-btn-rectangle u-button-style u-hover-none u-none u-radius-0 u-top-left-radius-0 u-top-right-radius-0 u-btn-3">В начало</a>
+		  
+		 <!-- <a href="#" >Отправить</a>  -->
+			
+		  	<!--
+			var b64Response = btoa(unescape(encodeURIComponent(data)))
+			var elem = document.getElementsByClassName('u-image u-image-default u-image-1')[0];
+			var timestamp = new Date().getTime();  
+			elem.src = elem.src + '?t=' + timestamp; -->
+			
+          <a href="#" class="u-active-none u-border-2 u-border-palette-1-base u-bottom-left-radius-0 u-bottom-right-radius-0 u-btn u-btn-rectangle u-button-style u-hover-none u-none u-radius-0 u-top-left-radius-0 u-top-right-radius-0 u-btn-1"
+		   onclick="$.ajax({type: 'GET', url: 'https://gallery.com', contentType : 'image/jpeg',
+			success: function(data){ 
+			incrementPageCounter(); 
+			var elem = document.getElementById('img_1'); console.log(elem); elem.src = 'page/' + counterPage + '/pic/1'; 
+			var elem = document.getElementById('frame_1'); console.log(elem); elem.src = 'page/' + counterPage + '/pic/1/text'; 
+			var elem = document.getElementById('img_2'); console.log(elem); elem.src = 'page/' + counterPage + '/pic/2';
+			var elem = document.getElementById('frame_2'); console.log(elem); elem.src = 'page/' + counterPage + '/pic/2/text';
+			},
+			error : function(){log.console('success func error');} });">Следующая страница</a>
+          <a href="#" class="u-active-none u-border-2 u-border-palette-1-base u-bottom-left-radius-0 u-bottom-right-radius-0 u-btn u-btn-rectangle u-button-style u-hover-none u-none u-radius-0 u-top-left-radius-0 u-top-right-radius-0 u-btn-2"
+		  onclick="$.ajax({type: 'GET', url: 'https://gallery.com', contentType : 'image/jpeg',
+			success: function(data){ 
+			decrementPageCounter(); 
+			var elem = document.getElementById('img_1'); console.log(elem); elem.src = 'page/' + counterPage + '/pic/1'; 
+			var elem = document.getElementById('frame_1'); console.log(elem); elem.src = 'page/' + counterPage + '/pic/1/text'; 
+			var elem = document.getElementById('img_2'); console.log(elem); elem.src = 'page/' + counterPage + '/pic/2';
+			var elem = document.getElementById('frame_2'); console.log(elem); elem.src = 'page/' + counterPage + '/pic/2/text';
+			
+			},
+			error : function(){log.console('success func error');} });">Предыдущая страница</a>
+          <a href="#" class="u-active-none u-border-2 u-border-palette-1-base u-bottom-left-radius-0 u-bottom-right-radius-0 u-btn u-btn-rectangle u-button-style u-hover-none u-none u-radius-0 u-top-left-radius-0 u-top-right-radius-0 u-btn-3"
+			onclick="$.ajax({type: 'GET', url: 'https://gallery.com', contentType : 'image/jpeg',
+			success: function(data){ 
+			resetPageCounter(); 
+			var elem = document.getElementById('img_1'); console.log(elem); elem.src = 'page/' + counterPage + '/pic/1'; 
+			var elem = document.getElementById('frame_1'); console.log(elem); elem.src = 'page/' + counterPage + '/pic/1/text'; 
+			var elem = document.getElementById('img_2'); console.log(elem); elem.src = 'page/' + counterPage + '/pic/2';
+			var elem = document.getElementById('frame_2'); console.log(elem); elem.src = 'page/' + counterPage + '/pic/2/text';
+			},
+			error : function(){log.console('success func error');} });">В начало</a>
           <a href="https://gallery.com/page=last" class="u-active-none u-border-2 u-border-palette-1-base u-bottom-left-radius-0 u-bottom-right-radius-0 u-btn u-btn-round u-button-style u-hover-feature u-hover-none u-none u-radius-0 u-top-left-radius-0 u-top-right-radius-0 u-btn-4">В конец</a>
         </div>
       </div>

@@ -11,7 +11,10 @@ import (
 	"os"
 	"strconv"
 
+	//_ "web_app/internal/dom"
+
 	"github.com/gorilla/mux"
+	_ "github.com/jinzhu/gorm"
 	_ "github.com/lib/pq"
 	"github.com/pkg/errors"
 )
@@ -27,6 +30,8 @@ type ApiError struct {
 	Error      error
 }
 
+const configsDir = "configs"
+
 func main() {
 	fmt.Println("hello")
 	router := mux.NewRouter()
@@ -41,20 +46,66 @@ func main() {
 	}
 	handlers.DB = db
 	defer handlers.DB.Close()
-	router.HandleFunc("/images/page/{page:[0-9]+}/pic/{pic_num:[0-9]+}", handlers.ServeDynamicPictures).Methods("GET")
-	router.HandleFunc("/images/page/{page:[0-9]+}/pic/{pic_num:[0-9]+}/text", handlers.ServeDynamicPicturesText).Methods("GET")
+	router.HandleFunc("/page/{page:[0-9]+}/pic/{pic:[0-9]+}", handlers.ServeDynamicPictures).Methods("GET")
+	router.HandleFunc("/page/{page:[0-9]+}/pic/{pic:[0-9]+}/text", handlers.ServeDynamicPicturesText).Methods("GET")
 
 	router.HandleFunc("/admin/upload", handlers.ServeAddPictures).Methods("POST")
 
 	log.Fatal(http.ListenAndServe(":8080", router))
 }
 
+func (hdlr HandlerWrapper) ServeDynamicPictures(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("-----------------------------------------------")
+
+	vars := mux.Vars(r)
+	pic, _ := strconv.Atoi(vars["pic"])
+	page, _ := strconv.Atoi(vars["page"])
+	pic_id := page*2 - 2 + pic
+	fmt.Println("img: ", page, pic, pic_id)
+	var path string
+	rows, err := hdlr.DB.Query(`SELECT picture_path FROM pictures WHERE picture_id = $1`, pic_id)
+	if err != nil {
+		http.Error(w, "cant select from database: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		err = rows.Scan(&path)
+		if err != nil {
+			http.Error(w, "cant scan data from database: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+	fmt.Println(path)
+	fileBytes, err := ioutil.ReadFile(path)
+	if err != nil {
+		http.Error(w, "cant read file from db: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "image/jpg")
+	w.Header().Set("accept-ranges", "bytes")
+	content_length := strconv.Itoa(len(fileBytes))
+	w.Header().Set("content-length", content_length)
+
+	//new_page := strconv.Itoa(page_cookie)
+	//http.SetCookie(w, &http.Cookie{MaxAge: 0})
+	//http.SetCookie(w, &http.Cookie{Name: "page", Value: new_page, HttpOnly: true, Secure: true})
+
+	//dst := make([]byte, base64.StdEncoding.EncodedLen(len(fileBytes)))
+	//base64.StdEncoding.Encode(dst, fileBytes)
+	w.Write(fileBytes)
+	w.WriteHeader(http.StatusAccepted) //RETURN HTTP CODE 202
+}
+
 func (hdlr HandlerWrapper) ServeDynamicPicturesText(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("-----------------------------------------------")
 	vars := mux.Vars(r)
 	page, _ := strconv.Atoi(vars["page"])
-	pic_num, _ := strconv.Atoi(vars["pic_num"])
-	pic_id := page*2 - 2 + pic_num
+	pic, _ := strconv.Atoi(vars["pic"])
+	pic_id := page*2 - 2 + pic
+
+	fmt.Println("text: ", page, pic, pic_id)
 	rows, err := hdlr.DB.Query(`SELECT picture_name, picture_description, author, price, is_purchased FROM pictures WHERE picture_id = $1`, pic_id)
 	if err != nil {
 		http.Error(w, "cant select from database: "+err.Error(), http.StatusInternalServerError)
@@ -79,45 +130,13 @@ func (hdlr HandlerWrapper) ServeDynamicPicturesText(w http.ResponseWriter, r *ht
 	fmt.Fprint(w, `<div> <h1> Автор: `, PR.Author, `</h1> </div>`,
 		`<div> Название: `, PR.Picture_name, `</div>`,
 		`<div> Цена: `, PR.Price, ` руб. </div>`,
-		`<div> Описание:`, PR.Picture_description, `</div>`,
+		`<div> Описание: `, PR.Picture_description, `</div>`,
 		`<div> Состояние: `, fn(PR.Is_purchased), `</div>`)
+
+	//new_page := strconv.Itoa(page_cookie)
+	//http.SetCookie(w, &http.Cookie{MaxAge: 0})
+	//http.SetCookie(w, &http.Cookie{Name: "page", Value: new_page, HttpOnly: true, Secure: true})
 	w.WriteHeader(http.StatusAccepted)
-}
-
-func (hdlr HandlerWrapper) ServeDynamicPictures(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("-----------------------------------------------")
-	vars := mux.Vars(r)
-	page, _ := strconv.Atoi(vars["page"])
-	pic_num, _ := strconv.Atoi(vars["pic_num"])
-	pic_id := page*2 - 2 + pic_num
-	var path string
-	rows, err := hdlr.DB.Query(`SELECT picture_path FROM pictures WHERE picture_id = $1`, pic_id)
-	if err != nil {
-		http.Error(w, "cant select from database: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
-	defer rows.Close()
-	for rows.Next() {
-		err = rows.Scan(&path)
-		if err != nil {
-			http.Error(w, "cant scan data from database: "+err.Error(), http.StatusInternalServerError)
-			return
-		}
-	}
-
-	fileBytes, err := ioutil.ReadFile(path)
-	if err != nil {
-		http.Error(w, "cant read file from db: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "image/jpg")
-	w.Header().Set("accept-ranges", "bytes")
-	content_length := strconv.Itoa(len(fileBytes))
-	w.Header().Set("content-length", content_length)
-	w.Write(fileBytes)
-
-	w.WriteHeader(http.StatusAccepted) //RETURN HTTP CODE 202
 }
 
 //добавить нормальную валидацию параметров и чтению в структуру в отдельную функцию/пакет
@@ -131,12 +150,9 @@ type PictureRecord struct {
 }
 
 func AddPictureRecordToDB(db *sql.DB, PR PictureRecord) (sql.Result, error) {
-	fmt.Println(PR)
 	result, err := db.Exec(`INSERT INTO pictures (picture_name, picture_description, author, price, is_purchased,
 		picture_path) VALUES ($1, $2, $3, $4, $5, $6)`, PR.Picture_name, PR.Picture_description, PR.Author, PR.Price,
 		PR.Is_purchased, PR.Picture_path)
-	fmt.Println(result, "asdsad")
-	fmt.Println(err, "aswwwww")
 	return result, err
 }
 
@@ -167,19 +183,16 @@ func ValidateParams(r *http.Request) (PictureRecord, error) {
 }
 
 func (hdlr HandlerWrapper) ServeAddPictures(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("here")
 	PR, err := ValidateParams(r)
 	if err != nil {
 		http.Error(w, "Error in Validating Params"+err.Error(), http.StatusInternalServerError)
 		return
 	}
-	fmt.Println("here2")
 	res, err := AddPictureRecordToDB(hdlr.DB, PR)
 	if err != nil {
 		http.Error(w, "cant insert file in database: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
-	fmt.Println("here3")
 	fmt.Fprintf(w, "Success upload to database %v\n", res)
 	w.WriteHeader(http.StatusAccepted)
 }
