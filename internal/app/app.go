@@ -3,53 +3,65 @@ package app
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 	"web_app/internal/config"
+	"web_app/internal/database"
+	"web_app/internal/server"
+	"web_app/internal/service"
+	transport "web_app/internal/transport/http"
+
+	"github.com/jinzhu/gorm"
+	_ "github.com/lib/pq"
+	log "github.com/sirupsen/logrus"
 )
 
 func Run(configPath string) {
 	cfg, err := config.Init(configPath)
 	if err != nil {
-		//logger.Error(err)
+		log.Error(err)
 		return
 	}
 
 	// Dependencies
-	mongoClient, err := Postgres.NewClient(cfg.Postgres.URI, cfg.Postgres.User, cfg.Postgres.Password)
-	if err != nil {
-		//logger.Error(err)
+	//db, err := gorm.Open("postgres", connStr)
 
+	connStr := "host = db port = 5432 user=admin password=root dbname=postgres sslmode=disable"
+	db, err := gorm.Open("postgres", connStr)
+
+	if err != nil {
+		log.Errorf("cant connect to db:", err)
 		return
 	}
+	//mongoClient, err := Postgres.NewClient(cfg.Postgres.URI, cfg.Postgres.User, cfg.Postgres.Password)
+	//db := mongoClient.Database(cfg.Postgres.Name)
 
-	db := mongoClient.Database(cfg.Postgres.Name)
-
-	// Services, Repos & API Handlers
+	// создаем таблицы (если не созданы)
 	tables := database.NewTables(db)
+	//создаем наши сервисы (некоторые на основе таблиц)
 	services := service.NewServices(service.Deps{
-		Tables:          tables,
-		StorageProvider: storageProvider,
-		Environment:     cfg.Environment,
-		Domain:          cfg.HTTP.Host,
+		Tables: tables,
+		//todo. Добавить TokenManager, PasswordHasher, Cacher
+		Environment: cfg.Environment,
+		Domain:      cfg.HTTP.Host,
 	})
-	handlers := transport.NewHandler(services, tokenManager)
 
-	services.Files.InitStorageUploaderWorkers(context.Background())
+	handlers := transport.NewHandler(services)
 
 	// HTTP Server
 	srv := server.NewServer(cfg, handlers.Init(cfg))
 
 	go func() {
 		if err := srv.Run(); !errors.Is(err, http.ErrServerClosed) {
-			//logger.Errorf("error occurred while running http server: %s\n", err.Error())
+			log.Errorf("error occurred while running http server:", err)
+			return
 		}
 	}()
-
-	//logger.Info("Server started")
+	log.Info("Server started")
 
 	// Graceful Shutdown
 	quit := make(chan os.Signal, 1)
@@ -63,10 +75,11 @@ func Run(configPath string) {
 	defer shutdown()
 
 	if err := srv.Stop(ctx); err != nil {
-		//logger.Errorf("failed to stop server: %v", err)
+		log.Errorf("failed to stop server: ", err)
 	}
 
-	if err := mongoClient.Disconnect(context.Background()); err != nil {
-		//logger.Error(err.Error())
+	if err := db.Close(); err != nil {
+		fmt.Println(err.Error())
+		log.Error(err)
 	}
 }

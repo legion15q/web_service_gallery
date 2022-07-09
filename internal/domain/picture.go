@@ -1,13 +1,13 @@
 package domain
 
-import "github.com/jinzhu/gorm"
-
 type Picture struct {
-	gorm.Model
-	Picture_name        string
-	Picture_description string
-	Author              string
-	Price               float32
-	Is_purchased        bool
-	Picture_path        string
+	ID                  uint    `json:"-" gorm:"primary_key"`
+	Picture_name        string  `json:"picture_name"`
+	Picture_description string  `json:"picture_description"`
+	Author              string  `json:"author"`
+	Price               float32 `json:"price"`
+	Is_purchased        bool    `json:"is_purchased"`
+	Picture_path        string  `json:"picture_path"`
 }
+
+//todo. Добавить описание таблицы users, возможно admins. Либо в этот go файл, либо в отдельный
