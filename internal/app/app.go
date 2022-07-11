@@ -46,8 +46,9 @@ func Run(configPath string) {
 	services := service.NewServices(service.Deps{
 		Tables: tables,
 		//todo. Добавить TokenManager, PasswordHasher, Cacher
-		Environment: cfg.Environment,
-		Domain:      cfg.HTTP.Host,
+		File_storage_path: "images/",
+		Environment:       cfg.Environment,
+		Domain:            cfg.HTTP.Host,
 	})
 
 	handlers := transport.NewHandler(services)

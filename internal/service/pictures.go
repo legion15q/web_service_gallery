@@ -27,3 +27,7 @@ func (obj *PicturesService) GetPicturePathById(id uint) (string, error) {
 func (obj *PicturesService) GetPictureById(id uint) (domain.Picture, error) {
 	return obj.table.GetPictureById(id)
 }
+
+func (obj *PicturesService) GetMaxIdValue() (uint, error) {
+	return obj.table.GetMaxIdValue()
+}

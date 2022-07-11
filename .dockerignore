@@ -1,0 +1,7 @@
+passphrase.txt
+postgres_data/
+.git
+.gitignore
+*.md
+*.txt
+src/

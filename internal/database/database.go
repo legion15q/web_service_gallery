@@ -17,6 +17,7 @@ type Pictures interface {
 	AddPicture(pic domain.Picture) error
 	GetPictureById(id uint) (domain.Picture, error)
 	GetPicturePathById(id uint) (string, error)
+	GetMaxIdValue() (uint, error)
 }
 
 func NewTables(db *gorm.DB) *Tables {

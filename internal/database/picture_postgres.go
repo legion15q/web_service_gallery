@@ -23,8 +23,14 @@ func NewPicturesTableIFNotExist(db *gorm.DB) PicturesTable {
 }
 
 func (obj PicturesTable) AddPicture(pic domain.Picture) error {
-	err := obj.db.Create(&pic).Error
+	id, err := obj.GetMaxIdValue()
+	id = id + 1
 	if err != nil {
+		return errors.Wrap(err, "cant get max id value")
+	}
+	pic.ID = id
+	err_ := obj.db.Create(&pic).Error
+	if err_ != nil {
 		return errors.Wrap(err, "cant insert into database")
 	}
 	return nil
@@ -37,7 +43,6 @@ func (obj PicturesTable) GetPictureById(id uint) (domain.Picture, error) {
 		return domain.Picture{}, errors.Wrap(err, "cant find picture by id")
 	}
 	return picture, nil
-
 }
 func (obj PicturesTable) GetPicturePathById(id uint) (string, error) {
 	picture := domain.Picture{}
@@ -46,4 +51,13 @@ func (obj PicturesTable) GetPicturePathById(id uint) (string, error) {
 		return "", errors.Wrap(err, "cant find picture path by id")
 	}
 	return picture.Picture_path, nil
+}
+
+func (obj PicturesTable) GetMaxIdValue() (uint, error) {
+	pic := domain.Picture{}
+	err := obj.db.Last(&pic).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return 0, nil
+	}
+	return pic.ID, err
 }

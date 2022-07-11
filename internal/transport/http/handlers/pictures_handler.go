@@ -5,12 +5,13 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"os"
+	"path/filepath"
 	"strconv"
 	"web_app/internal/domain"
 	"web_app/internal/service"
 
 	"github.com/gorilla/mux"
+	"github.com/gorilla/schema"
 	"github.com/pkg/errors"
 )
 
@@ -51,6 +52,7 @@ func (h *Handler) ServeDynamicPictures(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-length", content_length)
 	w.Write(fileBytes)
 	w.WriteHeader(http.StatusAccepted)
+
 }
 
 func (h *Handler) ServeDynamicPicturesText(w http.ResponseWriter, r *http.Request) {
@@ -97,23 +99,23 @@ func (h *Handler) ValidateParams(r *http.Request) (domain.Picture, error) {
 	if err != nil {
 		return domain.Picture{}, errors.Wrap(err, "cant read file")
 	}
+	fileExtension := filepath.Ext(handler.Filename)
+	decoder := schema.NewDecoder()
+	decoder.IgnoreUnknownKeys(true)
+	picture := &domain.Picture{}
+	err_ := decoder.Decode(picture, r.MultipartForm.Value)
+	if err_ != nil {
+		return *picture, errors.Wrap(err, "cant decode msg")
+	}
 	defer uploadData.Close()
-	picture_path := "images/" + handler.Filename
-	price, err := strconv.ParseFloat(r.FormValue("price"), 32)
+	newFile, file_path, err := h.services.StorageManager.CreateUnicFile(fileExtension)
+	picture.Picture_path = file_path
 	if err != nil {
-		return domain.Picture{}, errors.Wrap(err, "cant parse (incorrect) price value")
+		return domain.Picture{}, errors.Wrap(err, "cant create file")
 	}
-	is_purchased, err := strconv.ParseBool(r.FormValue("is_purchased"))
-	if err != nil {
-		return domain.Picture{}, errors.Wrap(err, "cant parse (incorrect) purchased value")
-	}
-	id, _ := strconv.Atoi(r.FormValue("ID"))
-	PR := domain.Picture{uint(id), r.FormValue("picture_name"), r.FormValue("picture_description"), r.FormValue("author"), float32(price), is_purchased, picture_path}
-	newFile, err := os.Create(picture_path)
+	defer newFile.Close()
 	if _, err := io.Copy(newFile, uploadData); err != nil {
-		return domain.Picture{}, errors.Wrap(err, "cant save file")
+		return domain.Picture{}, errors.Wrap(err, "cant copy file from request file")
 	}
-	//newFile.Sync()
-	newFile.Close()
-	return PR, err
+	return *picture, nil
 }
