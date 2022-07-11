@@ -3,3 +3,12 @@ http:
   maxHeaderBytes: 1
   readTimeout: 10s
   writeTimeout: 10s
+html:
+  templates:
+    picture_info: "./templates/picture_info.html"
+postgres:
+  databaseName: postgres
+
+filestorage:
+  path_in_wm: "images/"
+  

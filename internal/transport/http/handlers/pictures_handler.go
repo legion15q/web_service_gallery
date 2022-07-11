@@ -10,6 +10,8 @@ import (
 	"web_app/internal/domain"
 	"web_app/internal/service"
 
+	//sender "web_app/pkg/tempaltes_sender"
+
 	"github.com/gorilla/mux"
 	"github.com/gorilla/schema"
 	"github.com/pkg/errors"
@@ -65,18 +67,7 @@ func (h *Handler) ServeDynamicPicturesText(w http.ResponseWriter, r *http.Reques
 		http.Error(w, "cant get picture from db: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
-	fn := func(is_purchased bool) string {
-		if is_purchased {
-			return "продано"
-		} else {
-			return "на продаже"
-		}
-	}
-	fmt.Fprint(w, `<div> <h1> Автор: `, picture.Author, `</h1> </div>`,
-		`<div> Название: `, picture.Picture_name, `</div>`,
-		`<div> Цена: `, picture.Price, ` руб. </div>`,
-		`<div> Описание: `, picture.Picture_description, `</div>`,
-		`<div> Состояние: `, fn(picture.Is_purchased), `</div>`)
+	fmt.Fprint(w, h.services.TemplateParser.GenerateBodyFromHTML(picture))
 	w.WriteHeader(http.StatusAccepted)
 }
 
@@ -92,6 +83,7 @@ func (h *Handler) ServeAddPictures(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusAccepted)
+
 }
 
 func (h *Handler) ValidateParams(r *http.Request) (domain.Picture, error) {

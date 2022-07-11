@@ -17,28 +17,25 @@ import (
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/lib/pq"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 func Run(configPath string) {
 	cfg, err := config.Init(configPath)
 	if err != nil {
-		log.Error(err)
+		logrus.Error(err)
 		return
 	}
-
+	logrus.Info(cfg)
 	// Dependencies
-	//db, err := gorm.Open("postgres", connStr)
-
-	connStr := "host = db port = 5432 user=admin password=root dbname=postgres sslmode=disable"
+	connStr := "host=" + cfg.Postgres.Host + " port=" + cfg.Postgres.Port + " user=" + cfg.Postgres.User +
+		" password=" + cfg.Postgres.Password + " dbname=" + cfg.Postgres.Name + " sslmode=" + cfg.Postgres.Postgres_ssl_mode
 	db, err := gorm.Open("postgres", connStr)
 
 	if err != nil {
-		log.Errorf("cant connect to db:", err)
+		logrus.Errorf("cant connect to db:", err)
 		return
 	}
-	//mongoClient, err := Postgres.NewClient(cfg.Postgres.URI, cfg.Postgres.User, cfg.Postgres.Password)
-	//db := mongoClient.Database(cfg.Postgres.Name)
 
 	// создаем таблицы (если не созданы)
 	tables := database.NewTables(db)
@@ -46,9 +43,10 @@ func Run(configPath string) {
 	services := service.NewServices(service.Deps{
 		Tables: tables,
 		//todo. Добавить TokenManager, PasswordHasher, Cacher
-		File_storage_path: "images/",
+		File_storage_path: cfg.FileStorage.Path_in_wm,
 		Environment:       cfg.Environment,
 		Domain:            cfg.HTTP.Host,
+		TemplateFileName:  cfg.HTML.Templates.Picture_info,
 	})
 
 	handlers := transport.NewHandler(services)
@@ -58,11 +56,11 @@ func Run(configPath string) {
 
 	go func() {
 		if err := srv.Run(); !errors.Is(err, http.ErrServerClosed) {
-			log.Errorf("error occurred while running http server:", err)
+			logrus.Errorf("error occurred while running http server:", err)
 			return
 		}
 	}()
-	log.Info("Server started")
+	logrus.Info("Server started")
 
 	// Graceful Shutdown
 	quit := make(chan os.Signal, 1)
@@ -76,11 +74,11 @@ func Run(configPath string) {
 	defer shutdown()
 
 	if err := srv.Stop(ctx); err != nil {
-		log.Errorf("failed to stop server: ", err)
+		logrus.Errorf("failed to stop server: ", err)
 	}
 
 	if err := db.Close(); err != nil {
 		fmt.Println(err.Error())
-		log.Error(err)
+		logrus.Error(err)
 	}
 }

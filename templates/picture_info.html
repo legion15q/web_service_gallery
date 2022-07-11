@@ -1,0 +1,5 @@
+<div> <h1> Автор:  {{.Author}} </h1> </div>
+<div> Название:  {{.Picture_name}} </div>
+<div> Цена:  {{.Price}}  руб. </div>
+<div> Описание:  {{.Picture_description}} </div>
+<div> Состояние:  {{if .Is_purchased}} продано {{else}} на продаже {{end}} </div>

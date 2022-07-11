@@ -4,6 +4,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
@@ -20,12 +21,25 @@ type (
 		Environment string
 		Postgres    PostgresConfig
 		HTTP        HTTPConfig
+		HTML        HTMLConfig
+		FileStorage FileStorageCongig
+	}
+	FileStorageCongig struct {
+		Path_in_wm string `mapstructure:"path_in_wm"`
+	}
+	HTMLConfig struct {
+		Templates HTMLTemplates
+	}
+	HTMLTemplates struct {
+		Picture_info string `mapstructure:"picture_info"`
 	}
 	PostgresConfig struct {
-		URI      string
-		User     string
-		Password string
-		Name     string `mapstructure:"databaseName"`
+		Host              string
+		Port              string
+		Postgres_ssl_mode string
+		User              string
+		Password          string
+		Name              string `mapstructure:"databaseName"`
 	}
 	HTTPConfig struct {
 		Host               string        `mapstructure:"host"`
@@ -38,7 +52,7 @@ type (
 
 func Init(configsDir string) (*Config, error) {
 	populateDefaults()
-
+	logrus.Info(os.Getenv("APP_ENV"))
 	if err := parseConfigFile(configsDir, os.Getenv("APP_ENV")); err != nil {
 		return nil, err
 	}
@@ -55,7 +69,9 @@ func Init(configsDir string) (*Config, error) {
 
 func setFromEnv(cfg *Config) {
 	// TODO use envconfig https://github.com/kelseyhightower/envconfig
-	cfg.Postgres.URI = os.Getenv("POSTGRES_URI")
+	cfg.Postgres.Host = os.Getenv("POSTGRES_HOST")
+	cfg.Postgres.Postgres_ssl_mode = os.Getenv("POSTGRES_SSL_MODE")
+	cfg.Postgres.Port = os.Getenv("POSTGRES_PORT")
 	cfg.Postgres.User = os.Getenv("POSTGRES_USER")
 	cfg.Postgres.Password = os.Getenv("POSTGRES_PASS")
 	cfg.HTTP.Host = os.Getenv("HTTP_HOST")
@@ -86,6 +102,18 @@ func unmarshal(cfg *Config) error {
 	}
 
 	if err := viper.UnmarshalKey("http", &cfg.HTTP); err != nil {
+		return err
+	}
+
+	if err := viper.UnmarshalKey("html", &cfg.HTML); err != nil {
+		return err
+	}
+
+	if err := viper.UnmarshalKey("postgres", &cfg.Postgres); err != nil {
+		return err
+	}
+
+	if err := viper.UnmarshalKey("filestorage", &cfg.FileStorage); err != nil {
 		return err
 	}
 
